@@ -20,3 +20,23 @@
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+
+# Project files
+.DS_Store
+.gradle
+.idea
+.classpath
+.project
+.settings
+.yardoc
+.yardopts
+build
+target
+out
+*.iml
+*.ipr
+*.iws
+test-output
+test-results
+test-tmp
+*.swp
