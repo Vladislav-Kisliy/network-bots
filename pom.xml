@@ -24,17 +24,18 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <netty.dev.tools.directory>${project.build.directory}/dev-tools</netty.dev.tools.directory>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <netty.version>4.1.11.Final</netty.version>
-        <junit.version>4.12</junit.version>
+        <netty.version>0.9.6.RELEASE</netty.version>
+        <junit.version>4.13</junit.version>
     </properties>
 
     <dependencies>
         <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-all</artifactId>
+            <groupId>io.projectreactor.netty</groupId>
+            <artifactId>reactor-netty</artifactId>
             <version>${netty.version}</version>
             <scope>compile</scope>
         </dependency>
+
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
