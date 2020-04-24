@@ -1,16 +1,20 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.karlsoft</groupId>
-    <artifactId>network</artifactId>
-    <packaging>pom</packaging>
-    <version>1.0-SNAPSHOT</version>
+    <groupId>com.karlsoft.network</groupId>
+    <artifactId>ssh</artifactId>
+    <packaging>jar</packaging>
+    <version>0.1-SNAPSHOT</version>
 
-    <name>Java Network Bots</name>
+    <parent>
+        <groupId>com.karlsoft</groupId>
+        <artifactId>network</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+
+    <name>Ssh Network Bot</name>
     <url>https://github.com/Vladislav-Kisliy/network-bots</url>
-    <description>
-        A pack of network bots
-    </description>
     <licenses>
         <license>
             <name>Apache License, Version 2.0</name>
@@ -19,18 +23,11 @@
     </licenses>
 
     <properties>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
         <netty.dev.tools.directory>${project.build.directory}/dev-tools</netty.dev.tools.directory>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <netty.version>0.9.6.RELEASE</netty.version>
-        <junit.version>4.12</junit.version>
+        <junit.version>4.13</junit.version>
     </properties>
-
-    <modules>
-        <module>telnet</module>
-        <module>ssh</module>
-    </modules>
 
     <dependencies>
         <dependency>
@@ -44,6 +41,11 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>22.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.jcraft</groupId>
+            <artifactId>jsch</artifactId>
+            <version>0.1.54</version>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>

@@ -59,9 +59,9 @@ public class SshClient {
 
     public static void main(String[] args) {
         SshClient sshClient = new SshClient("localhost",
-                "test", "test");
+                "vlad", "2qJ8v949");
         Map<String, Object> context = new HashMap<>();
-        sshClient.executeCommand(context, new String[]{"ls", "w", "ps aux"});
+        sshClient.executeCommand(context, new String[]{"ls", "wassas", "ps aux"});
         System.out.println("context =" + context);
         for (Map.Entry<String, Object> item : context.entrySet()) {
             Map<String, byte[]> innerMap = (Map<String, byte[]>) item.getValue();
@@ -69,7 +69,7 @@ public class SshClient {
             byte[] outputBytes = innerMap.get(OUTPUT_KEY);
             System.out.printf("command =" + item.getKey());
             System.out.println(", output =" + new String(outputBytes));
-//                    + ", error =" + new String(errorBytes));
+            System.out.println(", error =" + new String(errorBytes));
         }
     }
 }

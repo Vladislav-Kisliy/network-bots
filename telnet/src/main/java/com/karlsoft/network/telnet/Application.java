@@ -1,4 +1,4 @@
-package com.karlsoft.network;
+package com.karlsoft.network.telnet;
 
 /**
  * Hello world!
