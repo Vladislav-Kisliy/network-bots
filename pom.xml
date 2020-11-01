@@ -23,8 +23,8 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <netty.dev.tools.directory>${project.build.directory}/dev-tools</netty.dev.tools.directory>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <netty.version>0.9.6.RELEASE</netty.version>
-        <junit.version>4.12</junit.version>
+        <netty.version>1.0.0</netty.version>
+        <junit.version>4.13.1</junit.version>
     </properties>
 
     <modules>
@@ -39,7 +39,19 @@
             <version>${netty.version}</version>
             <scope>compile</scope>
         </dependency>
-
+        <dependency>
+            <groupId>io.projectreactor.netty</groupId>
+            <artifactId>reactor-netty-core</artifactId>
+            <version>${netty.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <!--        <dependency>-->
+        <!--            <groupId>io.projectreactor.netty</groupId>-->
+        <!--            <artifactId>reactor-netty</artifactId>-->
+        <!--            <version>${netty.version}</version>-->
+        <!--&lt;!&ndash;            <scope>system</scope>&ndash;&gt;-->
+        <!--&lt;!&ndash;            <systemPath>${project.basedir}/libs/reactor-netty-1.0.0-SNAPSHOT.jar</systemPath>&ndash;&gt;-->
+        <!--        </dependency>-->
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
@@ -107,4 +119,22 @@
             </plugin>
         </plugins>
     </build>
+
+    <repositories>
+        <repository>
+            <id>repository.spring.milestone</id>
+            <name>Spring Milestone Repository</name>
+            <url>https://repo.spring.io/milestone</url>
+        </repository>
+        <repository>
+            <id>repository.spring.snapshot</id>
+            <name>Spring Snapshot Repository</name>
+            <url>https://repo.spring.io/snapshot</url>
+        </repository>
+        <repository>
+            <id>repository.spring.release</id>
+            <name>Spring Release Repository</name>
+            <url>https://repo.spring.io/release</url>
+        </repository>
+    </repositories>
 </project>
