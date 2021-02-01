@@ -1,11 +1,14 @@
 package com.karlsoft.network.telnet.client;
 
 import com.karlsoft.network.telnet.client.auth.Credentials;
-import com.karlsoft.network.telnet.client.auth.UsernamePasswordCredentials;
+import com.karlsoft.network.telnet.client.auth.BasicCredentials;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Publisher;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.netty.ByteBufFlux;
+import reactor.netty.ByteBufMono;
 import reactor.netty.Connection;
 import reactor.netty.NettyInbound;
 import reactor.netty.NettyOutbound;
@@ -53,39 +56,19 @@ public abstract class TelnetClient extends ClientTransport<TelnetClient, TelnetC
         return super.connectNow(timeout);
     }
 
-    public final TelnetClient autoDetectPrompt(boolean compressionEnabled) {
-        return this;
-    }
-
-    public final TelnetClient creds(@NonNull String userName, @NonNull String password) {
-        Credentials credentials = new UsernamePasswordCredentials(userName, password.toCharArray());
+    public final TelnetClient autoDetectPrompt(boolean promptDetectionEnabled) {
         TelnetClient dup = duplicate();
-        dup.configuration().credentials = credentials;
+        dup.configuration().promptDetectionEnabled = promptDetectionEnabled;
         return dup;
     }
-//    public final TelnetClient compress(boolean compressionEnabled) {
-//        if (compressionEnabled) {
-//            if (!configuration().acceptGzip) {
-////                HttpClient dup = duplicate();
-////                HttpHeaders headers = configuration().headers.copy();
-////                headers.add(HttpHeaderNames.ACCEPT_ENCODING, HttpHeaderValues.GZIP);
-////                dup.configuration().headers = headers;
-////                dup.configuration().acceptGzip = true;
-////                return dup;
-//            }
-//        }
-//        else if (configuration().acceptGzip) {
-//            HttpClient dup = duplicate();
-//            if (isCompressing(configuration().headers)) {
-//                HttpHeaders headers = configuration().headers.copy();
-//                headers.remove(HttpHeaderNames.ACCEPT_ENCODING);
-//                dup.configuration().headers = headers;
-//            }
-//            dup.configuration().acceptGzip = false;
-//            return dup;
-//        }
-//        return this;
-//    }
+
+    public final RequestSender creds(@NonNull Credentials credentials) {
+        Objects.requireNonNull(credentials, "credentials");
+        TelnetClientFinalizer dup = new TelnetClientFinalizer(new TelnetClientConfig(configuration()));
+        dup.configuration().credentials = credentials;
+        System.out.println("d =" + dup.getClass().getName());
+        return dup;
+    }
 
     static final class OnConnectedHandle implements Consumer<Connection> {
 
@@ -103,5 +86,24 @@ public abstract class TelnetClient extends ClientTransport<TelnetClient, TelnetC
             Mono.fromDirect(handler.apply((NettyInbound) c, (NettyOutbound) c))
                     .subscribe(c.disposeSubscriber());
         }
+    }
+
+    public interface RequestSender extends ResponseReceiver {
+
+        ResponseReceiver execute(String command);
+
+        ResponseReceiver execute(Mono<String> command);
+
+    }
+
+    public interface ResponseReceiver<S extends ResponseReceiver<?>> {
+
+        <V> Flux<V> response(BiFunction<? super TelnetClientResponse, ? super ByteBufFlux, ? extends Publisher<V>> receiver);
+
+        <V> Flux<V> responseConnection(BiFunction<? super TelnetClientResponse, ? super Connection, ? extends Publisher<V>> receiver);
+
+        ByteBufFlux responseContent();
+
+        <V> Mono<V> responseSingle(BiFunction<? super TelnetClientResponse, ? super ByteBufMono, ? extends Mono<V>> receiver);
     }
 }

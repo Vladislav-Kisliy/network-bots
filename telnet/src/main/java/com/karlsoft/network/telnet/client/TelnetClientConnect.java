@@ -23,9 +23,10 @@ import reactor.netty.transport.AddressUtils;
 
 import java.util.Collections;
 
-final class TelnetClientConnect extends TelnetClient {
+class TelnetClientConnect extends TelnetClient {
 
     private static final int DEFAULT_PORT = 23;
+
 
     private final TelnetClientConfig config;
 
