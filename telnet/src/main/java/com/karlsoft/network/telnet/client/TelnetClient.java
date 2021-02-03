@@ -1,7 +1,7 @@
 package com.karlsoft.network.telnet.client;
 
 import com.karlsoft.network.telnet.client.auth.Credentials;
-import com.karlsoft.network.telnet.client.auth.BasicCredentials;
+import com.karlsoft.network.telnet.protocol.setting.TelnetSetting;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Publisher;
@@ -17,6 +17,7 @@ import reactor.netty.tcp.TcpResources;
 import reactor.netty.transport.ClientTransport;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -59,6 +60,12 @@ public abstract class TelnetClient extends ClientTransport<TelnetClient, TelnetC
     public final TelnetClient autoDetectPrompt(boolean promptDetectionEnabled) {
         TelnetClient dup = duplicate();
         dup.configuration().promptDetectionEnabled = promptDetectionEnabled;
+        return dup;
+    }
+
+    public final TelnetClient telnetSettings(List<TelnetSetting> telnetSettings) {
+        TelnetClient dup = duplicate();
+        dup.configuration().telnetSettings = telnetSettings;
         return dup;
     }
 

@@ -1,4 +1,6 @@
-package com.karlsoft.network.telnet.protocol;
+package com.karlsoft.network.telnet.protocol.setting;
+
+import com.karlsoft.network.telnet.protocol.TelnetOption;
 
 public class TerminalTypeSetting extends AbstractTelnetSetting {
     private final String termType;

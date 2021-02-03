@@ -1,62 +1,49 @@
-package com.karlsoft.network.telnet.protocol;
+package com.karlsoft.network.telnet.protocol.option;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
+import com.karlsoft.network.telnet.protocol.TelnetCommand;
+import com.karlsoft.network.telnet.protocol.TelnetOption;
+import com.karlsoft.network.telnet.protocol.setting.TelnetSetting;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.socksx.v5.DefaultSocks5CommandRequest;
-import io.netty.handler.codec.socksx.v5.DefaultSocks5PasswordAuthRequest;
 import io.netty.handler.codec.socksx.v5.Socks5AddressType;
-import io.netty.handler.codec.socksx.v5.Socks5AuthMethod;
-import io.netty.handler.codec.socksx.v5.Socks5ClientEncoder;
-import io.netty.handler.codec.socksx.v5.Socks5CommandResponse;
 import io.netty.handler.codec.socksx.v5.Socks5CommandResponseDecoder;
-import io.netty.handler.codec.socksx.v5.Socks5CommandStatus;
 import io.netty.handler.codec.socksx.v5.Socks5CommandType;
-import io.netty.handler.codec.socksx.v5.Socks5InitialResponse;
-import io.netty.handler.codec.socksx.v5.Socks5InitialResponseDecoder;
-import io.netty.handler.codec.socksx.v5.Socks5PasswordAuthResponse;
-import io.netty.handler.codec.socksx.v5.Socks5PasswordAuthResponseDecoder;
-import io.netty.handler.codec.socksx.v5.Socks5PasswordAuthStatus;
+import io.netty.handler.codec.string.StringDecoder;
+import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.proxy.ProxyConnectException;
 import io.netty.handler.proxy.ProxyHandler;
 import io.netty.util.NetUtil;
 import io.netty.util.internal.StringUtil;
+import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.List;
 
+@Slf4j
 public class TelnetOptionHandler extends ProxyHandler {
-
-    private static final byte repl_1[] = {
-            (byte) 0xff, (byte) 0xfd, 0x03, (byte) 0xff, (byte) 0xfb, 0x18, (byte) 0xff, (byte) 0xfb,
-            0x1f, (byte) 0xff, (byte) 0xfb, 0x20, (byte) 0xff, (byte) 0xfb, 0x21, (byte) 0xff,
-            (byte) 0xfb, 0x22, (byte) 0xff, (byte) 0xfb, 0x27, (byte) 0xff, (byte) 0xfd, 0x05,
-            (byte) 0xff, (byte) 0xfb, 0x23};
 
     private static final String PROTOCOL = "telnet";
     private static final String AUTH_PASSWORD = "password";
+    private static final StringDecoder STRING_DECODER = new StringDecoder();
+    private static final StringEncoder STRING_ENCODER = new StringEncoder();
 
-    private final String username;
-    private final String password;
-
+    private final List<TelnetSetting> telnetSettings;
+    private final EnumMap<TelnetOption, TelnetOptionNegotiationHandler> negHandlers;
     private String decoderName;
     private String encoderName;
 
     public TelnetOptionHandler(SocketAddress proxyAddress) {
-        this(proxyAddress, null, null);
+        this(proxyAddress, Collections.emptyList());
     }
 
-    public TelnetOptionHandler(SocketAddress proxyAddress, String username, String password) {
+    public TelnetOptionHandler(SocketAddress proxyAddress, List<TelnetSetting> telnetSettings) {
         super(proxyAddress);
-        if (username != null && username.isEmpty()) {
-            username = null;
-        }
-        if (password != null && password.isEmpty()) {
-            password = null;
-        }
-        this.username = username;
-        this.password = password;
+        this.telnetSettings = telnetSettings;
+        this.negHandlers = new EnumMap<>(TelnetOption.class);
     }
 
     @Override
@@ -74,13 +61,14 @@ public class TelnetOptionHandler extends ProxyHandler {
         ChannelPipeline p = ctx.pipeline();
         String name = ctx.name();
 
-        TelnetInitialResponseDecoder decoder = new TelnetInitialResponseDecoder();
+        TelnetOptionPacketDecoder decoder = new TelnetOptionPacketDecoder();
         p.addBefore(name, null, decoder);
 
         decoderName = p.context(decoder).name();
         encoderName = decoderName + ".encoder";
-
-        p.addBefore(name, encoderName, Socks5ClientEncoder.DEFAULT);
+        p.addBefore(name, encoderName, TelnetOptionPacketEncoder.DEFAULT);
+        p.addLast(STRING_DECODER);
+        p.addLast(STRING_ENCODER);
     }
 
     @Override
@@ -98,17 +86,21 @@ public class TelnetOptionHandler extends ProxyHandler {
 
     @Override
     protected Object newInitialMessage(ChannelHandlerContext ctx) throws Exception {
-        System.out.println("sent a new initial message");
-        return Unpooled.wrappedBuffer(repl_1);
+        TelnetOptionPacket packet = null;
+        if (!telnetSettings.isEmpty()) {
+            packet = new DefaultTelnetOptionPacket(TelnetCommand.DO, TelnetOption.SUPPRESS_GO_AHEAD);
+        }
+        return packet;
     }
 
     @Override
     protected boolean handleResponse(ChannelHandlerContext ctx, Object response) throws Exception {
-        System.out.println("Got response =" + response);
-        if (response instanceof TelnetInitialResponse) {
-            TelnetInitialResponse res = (TelnetInitialResponse) response;
-            System.out.println("Command ="+res.getCommand());
-            System.out.println("Option ="+res.getOption());
+        log.debug("Got response =" + response);
+        if (response instanceof TelnetOptionPacket) {
+            TelnetOptionPacket res = (TelnetOptionPacket) response;
+            log.debug("Command {}, option {}", res.getCommand(), res.getOption());
+            TelnetOptionNegotiationHandler handler = getNegotiationHandler(res);
+            sendToProxyServer(handler.getResponse(res));
         }
 //        if (response instanceof Socks5InitialResponse) {
 //            Socks5InitialResponse res = (Socks5InitialResponse) response;
@@ -154,6 +146,18 @@ public class TelnetOptionHandler extends ProxyHandler {
 //        return true;
 //
         return false;
+    }
+
+    private TelnetOptionNegotiationHandler getNegotiationHandler(TelnetOptionPacket res) {
+        TelnetOptionNegotiationHandler handler;
+        if (negHandlers.containsKey(res.getOption())) {
+            handler = negHandlers.get(res.getOption());
+            log.debug("Found handler {}, for command {}", handler, res.getCommand());
+        } else {
+            log.debug("Didn't find handler, for command {}. Will use default", res.getCommand());
+            handler = DefaultTelnetOptionNegotiationHandler.DEFAULT;
+        }
+        return handler;
     }
 
 

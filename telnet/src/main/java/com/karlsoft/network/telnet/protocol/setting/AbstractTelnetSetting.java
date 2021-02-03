@@ -1,9 +1,10 @@
-package com.karlsoft.network.telnet.protocol;
+package com.karlsoft.network.telnet.protocol.setting;
 
+import com.karlsoft.network.telnet.protocol.TelnetOption;
 import lombok.Data;
 
 @Data
-public abstract class AbstractTelnetSetting {
+public abstract class AbstractTelnetSetting implements TelnetSetting {
 
     private final TelnetOption telnetOption;
     private final boolean initialLocal;

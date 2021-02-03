@@ -8,10 +8,33 @@ public enum TelnetCommand {
     ABORT(0xEE), EOR(0xEF), SE(0xF0),
     NOP(0xF1), DM(0xF2), BREAK(0xF3), IP(0xF4),
     AO(0xF5), AYT(0xF6), EC(0xF7), EL(0xF8),
-    GA(0xF9), SB(0xFA), WILL(0xFB),
-    WONT(0xFC), DO(0xFD), DONT(0xFE), IAC(0xFF),
+    GA(0xF9), SB(0xFA),
+    WILL(0xFB) {
+        @Override
+        public TelnetCommand negative() {
+            return DONT;
+        }
+    },
+    WONT(0xFC) {
+        @Override
+        public TelnetCommand negative() {
+            return DO;
+        }
+    },
+    DO(0xFD){
+        @Override
+        public TelnetCommand negative() {
+            return WONT;
+        }
+    },
+    DONT(0xFE) {
+        @Override
+        public TelnetCommand negative() {
+            return WILL;
+        }
+    },
+    IAC(0xFF),
     UNASSIGNED(-1);
-
 
     private static final TelnetCommand FIRST_COMMAND = IAC;
     private static final TelnetCommand LAST_COMMAND = EOF;
@@ -21,6 +44,14 @@ public enum TelnetCommand {
 
     TelnetCommand(int code) {
         this.code = code;
+    }
+
+    public int getCode() {
+        return code;
+    }
+
+    public TelnetCommand negative() {
+        return UNASSIGNED;
     }
 
     static {

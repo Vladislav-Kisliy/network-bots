@@ -59,6 +59,10 @@ public enum TelnetOption {
         this.code = code;
     }
 
+    public int getCode() {
+        return code;
+    }
+
     static {
         for (TelnetOption telnetOption : TelnetOption.values()) {
             MAPPING.put(telnetOption.code, telnetOption);
