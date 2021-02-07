@@ -1,6 +1,5 @@
 package com.karlsoft.network.telnet.protocol.option;
 
-import com.karlsoft.network.telnet.protocol.TelnetCommand;
 import com.karlsoft.network.telnet.protocol.TelnetOption;
 import com.karlsoft.network.telnet.protocol.setting.TelnetSetting;
 import com.karlsoft.network.telnet.transport.HexUtils;
@@ -11,8 +10,6 @@ import io.netty.handler.codec.socksx.v5.DefaultSocks5CommandRequest;
 import io.netty.handler.codec.socksx.v5.Socks5AddressType;
 import io.netty.handler.codec.socksx.v5.Socks5CommandResponseDecoder;
 import io.netty.handler.codec.socksx.v5.Socks5CommandType;
-import io.netty.handler.codec.string.StringDecoder;
-import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.proxy.ProxyConnectException;
 import io.netty.handler.proxy.ProxyHandler;
 import io.netty.util.NetUtil;
@@ -21,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
@@ -29,8 +26,14 @@ import java.util.List;
 @Slf4j
 public class TelnetOptionHandler extends ProxyHandler {
 
+    public static final String DEFAULT_PROMPT_MESSAGE = ">|>\\s|#|#\\s";
     private static final String PROTOCOL = "telnet";
     private static final String AUTH_PASSWORD = "password";
+    private static final String LOGIN_MESSAGE = "sername:|ogin:";
+    private static final String PASSWORD_MESSAGE = "assword:|PASSCODE:";
+    private static final String SECOND_LOGIN = ".+" + LOGIN_MESSAGE + "|" + DEFAULT_PROMPT_MESSAGE;
+    private static final String INCORRECT_LOGIN_CISCO = "Username";
+    private static final int PROMPT_ATTEMPTS = 10;
 
     private final List<TelnetSetting> telnetSettings;
     private final EnumMap<TelnetOption, TelnetOptionNegotiationHandler> negHandlers;
@@ -105,55 +108,12 @@ public class TelnetOptionHandler extends ProxyHandler {
             }
         } else if (response instanceof ByteBuf) {
             ByteBuf res = (ByteBuf) response;
-            String s = res.readCharSequence(res.readableBytes(), Charset.forName("utf-8")).toString();
+            String s = res.readCharSequence(res.readableBytes(), StandardCharsets.UTF_8).toString();
             System.out.println("lines =" + s);
             System.out.println("hex lines:");
             HexUtils.debugOutput(s);
 //            return true;
         }
-//        if (response instanceof Socks5InitialResponse) {
-//            Socks5InitialResponse res = (Socks5InitialResponse) response;
-//            Socks5AuthMethod authMethod = socksAuthMethod();
-//
-//            if (res.authMethod() != Socks5AuthMethod.NO_AUTH && res.authMethod() != authMethod) {
-//                // Server did not allow unauthenticated access nor accept the requested authentication scheme.
-//                throw new ProxyConnectException(exceptionMessage("unexpected authMethod: " + res.authMethod()));
-//            }
-//
-//            if (authMethod == Socks5AuthMethod.NO_AUTH) {
-//                sendConnectCommand(ctx);
-//            } else if (authMethod == Socks5AuthMethod.PASSWORD) {
-//                // In case of password authentication, send an authentication request.
-//                ctx.pipeline().replace(decoderName, decoderName, new Socks5PasswordAuthResponseDecoder());
-//                sendToProxyServer(new DefaultSocks5PasswordAuthRequest(
-//                        username != null? username : "", password != null? password : ""));
-//            } else {
-//                // Should never reach here.
-//                throw new Error();
-//            }
-//
-//            return false;
-//        }
-//
-//        if (response instanceof Socks5PasswordAuthResponse) {
-//            // Received an authentication response from the server.
-//            Socks5PasswordAuthResponse res = (Socks5PasswordAuthResponse) response;
-//            if (res.status() != Socks5PasswordAuthStatus.SUCCESS) {
-//                throw new ProxyConnectException(exceptionMessage("authStatus: " + res.status()));
-//            }
-//
-//            sendConnectCommand(ctx);
-//            return false;
-//        }
-//
-//        // This should be the last message from the server.
-//        Socks5CommandResponse res = (Socks5CommandResponse) response;
-//        if (res.status() != Socks5CommandStatus.SUCCESS) {
-//            throw new ProxyConnectException(exceptionMessage("status: " + res.status()));
-//        }
-//
-//        return true;
-//
         return false;
     }
 
@@ -179,27 +139,4 @@ public class TelnetOptionHandler extends ProxyHandler {
         return handler;
     }
 
-
-    private void sendConnectCommand(ChannelHandlerContext ctx) throws Exception {
-        InetSocketAddress raddr = destinationAddress();
-        Socks5AddressType addrType;
-        String rhost;
-        if (raddr.isUnresolved()) {
-            addrType = Socks5AddressType.DOMAIN;
-            rhost = raddr.getHostString();
-        } else {
-            rhost = raddr.getAddress().getHostAddress();
-            if (NetUtil.isValidIpV4Address(rhost)) {
-                addrType = Socks5AddressType.IPv4;
-            } else if (NetUtil.isValidIpV6Address(rhost)) {
-                addrType = Socks5AddressType.IPv6;
-            } else {
-                throw new ProxyConnectException(
-                        exceptionMessage("unknown address type: " + StringUtil.simpleClassName(rhost)));
-            }
-        }
-
-        ctx.pipeline().replace(decoderName, decoderName, new Socks5CommandResponseDecoder());
-        sendToProxyServer(new DefaultSocks5CommandRequest(Socks5CommandType.CONNECT, addrType, rhost, raddr.getPort()));
-    }
 }
