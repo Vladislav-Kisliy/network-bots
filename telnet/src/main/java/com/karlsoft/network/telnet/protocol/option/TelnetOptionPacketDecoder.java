@@ -37,7 +37,8 @@ public class TelnetOptionPacketDecoder extends ReplayingDecoder<TelnetOptionPack
                         log.debug("Found telnet mark");
                         checkpoint(State.READ_COMMAND);
                     } else {
-                        log.debug("Skip other characters");
+                        log.debug("Forward other characters");
+                        buf.resetReaderIndex();
                         int readableBytes = actualReadableBytes();
                         if (readableBytes > 0) {
                             out.add(buf.readRetainedSlice(readableBytes));
@@ -47,12 +48,17 @@ public class TelnetOptionPacketDecoder extends ReplayingDecoder<TelnetOptionPack
                 }
                 case READ_COMMAND: {
                     command = TelnetCommand.getCommand(buf.readUnsignedByte());
-                    checkpoint(State.READ_OPTION);
+                    if (command.isNegotiation()) {
+                        checkpoint(State.READ_OPTION);
+                    } else {
+                        out.add(DefaultTelnetCommandPacket.getCommandPacket(command));
+                        checkpoint(State.WAITING_MARK);
+                    }
                     break;
                 }
                 case READ_OPTION: {
                     TelnetOption option = TelnetOption.getOption(buf.readUnsignedByte());
-                    out.add(DefaultTelnetOptionPacket.getInitialResponse(command, option));
+                    out.add(DefaultTelnetOptionPacket.getOptionPacket(command, option));
                     checkpoint(State.WAITING_MARK);
                     break;
                 }

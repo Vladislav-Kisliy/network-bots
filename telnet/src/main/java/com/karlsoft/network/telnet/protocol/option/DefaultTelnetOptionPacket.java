@@ -7,24 +7,18 @@ import io.netty.util.internal.ObjectUtil;
 import lombok.Data;
 
 @Data
-public class DefaultTelnetOptionPacket implements TelnetOptionPacket {
+public class DefaultTelnetOptionPacket extends DefaultTelnetCommandPacket implements TelnetOptionPacket {
 
     public static final TelnetOptionPacket ERROR = new DefaultTelnetOptionPacket(TelnetCommand.UNASSIGNED, TelnetOption.UNASSIGNED);
-    private final TelnetCommand command;
     private final TelnetOption option;
-    private DecoderResult decoderResult = DecoderResult.SUCCESS;
 
-    public static TelnetOptionPacket getInitialResponse(TelnetCommand command, TelnetOption option) {
+    public DefaultTelnetOptionPacket(TelnetCommand command, TelnetOption option) {
+        super(command);
+        this.option = option;
+    }
+
+    public static TelnetOptionPacket getOptionPacket(TelnetCommand command, TelnetOption option) {
         return new DefaultTelnetOptionPacket(command, option);
     }
 
-    @Override
-    public DecoderResult decoderResult() {
-        return decoderResult;
-    }
-
-    @Override
-    public void setDecoderResult(DecoderResult decoderResult) {
-        this.decoderResult = ObjectUtil.checkNotNull(decoderResult, "decoderResult");
-    }
 }

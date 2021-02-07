@@ -7,9 +7,19 @@ public enum TelnetCommand {
     EOF(0xEC), SYNCH(0xF2), SUSP(0xED),
     ABORT(0xEE), EOR(0xEF), SE(0xF0),
     NOP(0xF1), DM(0xF2), BREAK(0xF3), IP(0xF4),
-    AO(0xF5), AYT(0xF6), EC(0xF7), EL(0xF8),
-    GA(0xF9), SB(0xFA),
+    AO(0xF5), AYT(0xF6), EC(0xF7), EL(0xF8), GA(0xF9),
+    SB(0xFA) {
+        @Override
+        public boolean isNegotiation() {
+            return true;
+        }
+    },
     WILL(0xFB) {
+        @Override
+        public boolean isNegotiation() {
+            return true;
+        }
+
         @Override
         public TelnetCommand negative() {
             return DONT;
@@ -17,17 +27,32 @@ public enum TelnetCommand {
     },
     WONT(0xFC) {
         @Override
+        public boolean isNegotiation() {
+            return true;
+        }
+
+        @Override
         public TelnetCommand negative() {
             return DO;
         }
     },
-    DO(0xFD){
+    DO(0xFD) {
+        @Override
+        public boolean isNegotiation() {
+            return true;
+        }
+
         @Override
         public TelnetCommand negative() {
             return WONT;
         }
     },
     DONT(0xFE) {
+        @Override
+        public boolean isNegotiation() {
+            return true;
+        }
+
         @Override
         public TelnetCommand negative() {
             return WILL;
@@ -52,6 +77,10 @@ public enum TelnetCommand {
 
     public TelnetCommand negative() {
         return UNASSIGNED;
+    }
+
+    public boolean isNegotiation() {
+        return false;
     }
 
     static {

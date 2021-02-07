@@ -69,6 +69,12 @@ public abstract class TelnetClient extends ClientTransport<TelnetClient, TelnetC
         return dup;
     }
 
+    public final TelnetClient telnetSessionTimeout(long telnetSessionTimeout) {
+        TelnetClient dup = duplicate();
+        dup.configuration().telnetSessionTimeout = telnetSessionTimeout;
+        return dup;
+    }
+
     public final RequestSender creds(@NonNull Credentials credentials) {
         Objects.requireNonNull(credentials, "credentials");
         TelnetClientFinalizer dup = new TelnetClientFinalizer(new TelnetClientConfig(configuration()));

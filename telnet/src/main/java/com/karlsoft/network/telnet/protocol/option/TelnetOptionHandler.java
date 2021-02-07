@@ -3,6 +3,8 @@ package com.karlsoft.network.telnet.protocol.option;
 import com.karlsoft.network.telnet.protocol.TelnetCommand;
 import com.karlsoft.network.telnet.protocol.TelnetOption;
 import com.karlsoft.network.telnet.protocol.setting.TelnetSetting;
+import com.karlsoft.network.telnet.transport.HexUtils;
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.socksx.v5.DefaultSocks5CommandRequest;
@@ -19,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
@@ -28,8 +31,6 @@ public class TelnetOptionHandler extends ProxyHandler {
 
     private static final String PROTOCOL = "telnet";
     private static final String AUTH_PASSWORD = "password";
-    private static final StringDecoder STRING_DECODER = new StringDecoder();
-    private static final StringEncoder STRING_ENCODER = new StringEncoder();
 
     private final List<TelnetSetting> telnetSettings;
     private final EnumMap<TelnetOption, TelnetOptionNegotiationHandler> negHandlers;
@@ -67,8 +68,6 @@ public class TelnetOptionHandler extends ProxyHandler {
         decoderName = p.context(decoder).name();
         encoderName = decoderName + ".encoder";
         p.addBefore(name, encoderName, TelnetOptionPacketEncoder.DEFAULT);
-        p.addLast(STRING_DECODER);
-        p.addLast(STRING_ENCODER);
     }
 
     @Override
@@ -87,20 +86,30 @@ public class TelnetOptionHandler extends ProxyHandler {
     @Override
     protected Object newInitialMessage(ChannelHandlerContext ctx) throws Exception {
         TelnetOptionPacket packet = null;
-        if (!telnetSettings.isEmpty()) {
-            packet = new DefaultTelnetOptionPacket(TelnetCommand.DO, TelnetOption.SUPPRESS_GO_AHEAD);
-        }
+//        if (!telnetSettings.isEmpty()) {
+//            packet = new DefaultTelnetOptionPacket(TelnetCommand.DO, TelnetOption.SUPPRESS_GO_AHEAD);
+//        }
         return packet;
     }
 
     @Override
     protected boolean handleResponse(ChannelHandlerContext ctx, Object response) throws Exception {
         log.debug("Got response =" + response);
-        if (response instanceof TelnetOptionPacket) {
-            TelnetOptionPacket res = (TelnetOptionPacket) response;
-            log.debug("Command {}, option {}", res.getCommand(), res.getOption());
-            TelnetOptionNegotiationHandler handler = getNegotiationHandler(res);
-            sendToProxyServer(handler.getResponse(res));
+        if (response instanceof TelnetCommandPacket) {
+            TelnetCommandPacket res = (TelnetCommandPacket) response;
+            System.out.println("res = " + res);
+            if (res.getCommand().isNegotiation()) {
+                handleOption((TelnetOptionPacket) res);
+            } else {
+                handleCommand(res);
+            }
+        } else if (response instanceof ByteBuf) {
+            ByteBuf res = (ByteBuf) response;
+            String s = res.readCharSequence(res.readableBytes(), Charset.forName("utf-8")).toString();
+            System.out.println("lines =" + s);
+            System.out.println("hex lines:");
+            HexUtils.debugOutput(s);
+//            return true;
         }
 //        if (response instanceof Socks5InitialResponse) {
 //            Socks5InitialResponse res = (Socks5InitialResponse) response;
@@ -146,6 +155,16 @@ public class TelnetOptionHandler extends ProxyHandler {
 //        return true;
 //
         return false;
+    }
+
+    private void handleCommand(TelnetCommandPacket res) {
+        log.debug("Command {}", res.getCommand());
+    }
+
+    private void handleOption(TelnetOptionPacket res) {
+        log.debug("Command {}, option {}", res.getCommand(), res.getOption());
+        TelnetOptionNegotiationHandler handler = getNegotiationHandler(res);
+        sendToProxyServer(handler.getResponse(res));
     }
 
     private TelnetOptionNegotiationHandler getNegotiationHandler(TelnetOptionPacket res) {

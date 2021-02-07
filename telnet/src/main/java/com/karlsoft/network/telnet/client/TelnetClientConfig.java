@@ -30,15 +30,13 @@ public final class TelnetClientConfig extends ClientTransportConfig<TelnetClient
     boolean promptDetectionEnabled = false;
     Credentials credentials;
     List<TelnetSetting> telnetSettings;
+    long telnetSessionTimeout;
     Function<? super Mono<? extends Connection>, ? extends Mono<? extends Connection>> connector;
     String command;
     Function<Mono<TelnetClientConfig>, Mono<TelnetClientConfig>> deferredConf;
 
 
     private static final ChannelOperations.OnSetup DEFAULT_OPS = (ch, c, msg) -> new ChannelOperations<>(ch, c);
-
-    private static final AddressResolverGroup<?> DEFAULT_RESOLVER =
-            NameResolverProvider.builder().build().newNameResolverGroup(TcpResources.get(), LoopResources.DEFAULT_NATIVE);
 
     TelnetClientConfig(ConnectionProvider connectionProvider, Map<ChannelOption<?>, ?> options,
                        Supplier<? extends SocketAddress> remoteAddress) {
@@ -50,6 +48,7 @@ public final class TelnetClientConfig extends ClientTransportConfig<TelnetClient
         this.command = parent.command;
         this.credentials = parent.credentials;
         this.telnetSettings = parent.telnetSettings;
+        this.telnetSessionTimeout = parent.telnetSessionTimeout;
         this.promptDetectionEnabled = parent.promptDetectionEnabled;
         this.connector = parent.connector;
     }
@@ -76,7 +75,8 @@ public final class TelnetClientConfig extends ClientTransportConfig<TelnetClient
 
     @Override
     protected ChannelPipelineConfigurer defaultOnChannelInit() {
-        return super.defaultOnChannelInit().then((new TelnetClientChannelInitializer(telnetSettings)));
+        return super.defaultOnChannelInit()
+                .then((new TelnetClientChannelInitializer(telnetSettings, telnetSessionTimeout)));
     }
 
     static final class MicrometerTcpClientMetricsRecorder extends MicrometerChannelMetricsRecorder {

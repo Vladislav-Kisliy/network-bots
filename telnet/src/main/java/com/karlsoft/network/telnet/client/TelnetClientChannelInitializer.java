@@ -17,20 +17,23 @@ public final class TelnetClientChannelInitializer implements ChannelPipelineConf
     public static final String TELNET_HANDLER = "TelnetOptionHandler";
 
     private final List<TelnetSetting> telnetSettings;
+    private final long connectTimeoutMillis;
 
-    public TelnetClientChannelInitializer(List<TelnetSetting> telnetSettings) {
+    public TelnetClientChannelInitializer(List<TelnetSetting> telnetSettings, long connectTimeoutMillis) {
         this.telnetSettings = telnetSettings;
+        this.connectTimeoutMillis = connectTimeoutMillis;
     }
 
     @Override
     public void onChannelInit(ConnectionObserver connectionObserver, Channel channel, SocketAddress remoteAddress) {
         Objects.requireNonNull(channel, "channel");
         ChannelPipeline pipeline = channel.pipeline();
-        pipeline.addFirst(TELNET_HANDLER, new TelnetOptionHandler(remoteAddress, telnetSettings));
+        TelnetOptionHandler handler = new TelnetOptionHandler(remoteAddress, telnetSettings);
+        handler.setConnectTimeoutMillis(connectTimeoutMillis);
+        pipeline.addFirst(TELNET_HANDLER, handler);
 
         if (pipeline.get(NettyPipeline.LoggingHandler) != null) {
-            pipeline.addBefore(NettyPipeline.ProxyHandler,
-                    NettyPipeline.ProxyLoggingHandler,
+            pipeline.addBefore(NettyPipeline.ProxyHandler, NettyPipeline.ProxyLoggingHandler,
                     TelnetClientConfig.LOGGING_HANDLER);
         }
     }
