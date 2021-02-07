@@ -4,7 +4,6 @@ import com.karlsoft.network.telnet.client.auth.Credentials;
 import com.karlsoft.network.telnet.protocol.setting.TelnetSetting;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.logging.LoggingHandler;
-import io.netty.resolver.AddressResolverGroup;
 import reactor.core.publisher.Mono;
 import reactor.netty.ChannelPipelineConfigurer;
 import reactor.netty.Connection;
@@ -15,7 +14,6 @@ import reactor.netty.resources.ConnectionProvider;
 import reactor.netty.resources.LoopResources;
 import reactor.netty.tcp.TcpResources;
 import reactor.netty.transport.ClientTransportConfig;
-import reactor.netty.transport.NameResolverProvider;
 
 import java.net.SocketAddress;
 import java.util.List;

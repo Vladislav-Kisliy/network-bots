@@ -22,12 +22,10 @@ final class TelnetClientFinalizer extends TelnetClientConnect implements TelnetC
     @Override
     public ResponseReceiver execute(String command) {
         Objects.requireNonNull(command, "command");
-//        TelnetClient dup = duplicate();
         TelnetClientFinalizer dup = new TelnetClientFinalizer(new TelnetClientConfig(configuration()));
         dup.configuration().command = command;
         System.out.println("f =" + dup.getClass().getName());
         dup.configuration().command = command;
-//        return (TelnetClientFinalizer) dup;
         return dup;
     }
 
