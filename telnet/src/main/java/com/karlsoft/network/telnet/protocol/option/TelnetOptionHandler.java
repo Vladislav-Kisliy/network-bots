@@ -1,5 +1,6 @@
 package com.karlsoft.network.telnet.protocol.option;
 
+import com.karlsoft.network.telnet.client.auth.Credentials;
 import com.karlsoft.network.telnet.protocol.TelnetOption;
 import com.karlsoft.network.telnet.protocol.setting.TelnetSetting;
 import com.karlsoft.network.telnet.transport.HexUtils;
@@ -11,12 +12,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 
 @Slf4j
 public class TelnetOptionHandler extends ProxyHandler {
+
 
     public static final String DEFAULT_PROMPT_MESSAGE = ">|>\\s|#|#\\s";
     private static final String PROTOCOL = "telnet";
@@ -25,21 +26,24 @@ public class TelnetOptionHandler extends ProxyHandler {
     private static final String PASSWORD_MESSAGE = "assword:|PASSCODE:";
     private static final String SECOND_LOGIN = ".+" + LOGIN_MESSAGE + "|" + DEFAULT_PROMPT_MESSAGE;
     private static final String INCORRECT_LOGIN_CISCO = "Username";
+    public static final String INCORRECT_LOGIN_MESSAGE = "incorrect";
+    public static final String INCORRECT_LOGIN_MESSAGE2 = "Error in authentication";
     private static final int PROMPT_ATTEMPTS = 10;
 
     private final List<TelnetSetting> telnetSettings;
+    private final Credentials creds;
     private final EnumMap<TelnetOption, TelnetOptionNegotiationHandler> negHandlers;
+    private final StringBuilder builder;
     private String decoderName;
     private String encoderName;
 
-    public TelnetOptionHandler(SocketAddress proxyAddress) {
-        this(proxyAddress, Collections.emptyList());
-    }
 
-    public TelnetOptionHandler(SocketAddress proxyAddress, List<TelnetSetting> telnetSettings) {
+    public TelnetOptionHandler(SocketAddress proxyAddress, List<TelnetSetting> telnetSettings, Credentials creds) {
         super(proxyAddress);
         this.telnetSettings = telnetSettings;
+        this.creds = creds;
         this.negHandlers = new EnumMap<>(TelnetOption.class);
+        this.builder = new StringBuilder();
     }
 
     @Override
@@ -57,12 +61,13 @@ public class TelnetOptionHandler extends ProxyHandler {
         ChannelPipeline p = ctx.pipeline();
         String name = ctx.name();
 
-        TelnetOptionPacketDecoder decoder = new TelnetOptionPacketDecoder();
-        p.addBefore(name, null, decoder);
+        TelnetOptionPacketDecoder commandDecoder = new TelnetOptionPacketDecoder();
+        p.addBefore(name, null, commandDecoder);
 
-        decoderName = p.context(decoder).name();
+        decoderName = p.context(commandDecoder).name();
         encoderName = decoderName + ".encoder";
         p.addBefore(name, encoderName, TelnetOptionPacketEncoder.DEFAULT);
+//        p.addBefore(name, TelnetStringPacketEncoder.class.toString(), TelnetStringPacketEncoder.DEFAULT);
     }
 
     @Override
@@ -101,8 +106,8 @@ public class TelnetOptionHandler extends ProxyHandler {
         } else if (response instanceof ByteBuf) {
             ByteBuf res = (ByteBuf) response;
             String s = res.readCharSequence(res.readableBytes(), StandardCharsets.UTF_8).toString();
-            System.out.println("lines =" + s);
-            System.out.println("hex lines:");
+            System.out.println("byteBuf lines =" + s);
+            System.out.println("byteBuf hex lines:");
             HexUtils.debugOutput(s);
 //            return true;
         }

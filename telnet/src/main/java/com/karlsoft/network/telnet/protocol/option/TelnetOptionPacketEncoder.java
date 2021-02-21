@@ -19,7 +19,6 @@ public class TelnetOptionPacketEncoder extends MessageToByteEncoder<TelnetOption
         } else {
             throw new EncoderException("unsupported message type: " + StringUtil.simpleClassName(msg));
         }
-
     }
 
     private static void encodeOptionPacket(DefaultTelnetOptionPacket msg, ByteBuf out) {

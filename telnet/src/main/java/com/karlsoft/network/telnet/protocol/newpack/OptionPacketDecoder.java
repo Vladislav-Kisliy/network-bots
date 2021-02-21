@@ -1,7 +1,10 @@
-package com.karlsoft.network.telnet.protocol.option;
+package com.karlsoft.network.telnet.protocol.newpack;
 
 import com.karlsoft.network.telnet.protocol.TelnetCommand;
 import com.karlsoft.network.telnet.protocol.TelnetOption;
+import com.karlsoft.network.telnet.protocol.option.DefaultTelnetCommandPacket;
+import com.karlsoft.network.telnet.protocol.option.DefaultTelnetOptionPacket;
+import com.karlsoft.network.telnet.protocol.option.TelnetOptionPacket;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.DecoderException;
@@ -9,11 +12,10 @@ import io.netty.handler.codec.DecoderResult;
 import io.netty.handler.codec.ReplayingDecoder;
 import lombok.extern.slf4j.Slf4j;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Slf4j
-public class TelnetOptionPacketDecoder extends ReplayingDecoder<TelnetOptionPacketDecoder.State> {
+public class OptionPacketDecoder extends ReplayingDecoder<OptionPacketDecoder.State> {
 
     enum State {
         WAITING_MARK,
@@ -24,7 +26,7 @@ public class TelnetOptionPacketDecoder extends ReplayingDecoder<TelnetOptionPack
 
     private TelnetCommand command;
 
-    public TelnetOptionPacketDecoder() {
+    public OptionPacketDecoder() {
         super(State.WAITING_MARK);
     }
 
@@ -38,15 +40,12 @@ public class TelnetOptionPacketDecoder extends ReplayingDecoder<TelnetOptionPack
                         log.debug("Found telnet mark");
                         checkpoint(State.READ_COMMAND);
                     } else {
-                        log.debug("Pack to StringPacket");
+                        log.debug("Forward other characters");
                         buf.resetReaderIndex();
                         int readableBytes = actualReadableBytes();
                         if (readableBytes > 0) {
-                            ByteBuf slice = buf.readRetainedSlice(readableBytes);
-                            String s = slice.readCharSequence(slice.readableBytes(), StandardCharsets.UTF_8).toString();
-//                            out.add(DefaultTelnetStringPacket.getPacket(s));
+                            out.add(buf.readRetainedSlice(readableBytes));
                         }
-
                     }
                     break;
                 }

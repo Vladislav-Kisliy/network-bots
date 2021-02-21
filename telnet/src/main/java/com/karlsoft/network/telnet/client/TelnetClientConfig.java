@@ -74,7 +74,7 @@ public final class TelnetClientConfig extends ClientTransportConfig<TelnetClient
     @Override
     protected ChannelPipelineConfigurer defaultOnChannelInit() {
         return super.defaultOnChannelInit()
-                .then((new TelnetClientChannelInitializer(telnetSettings, telnetSessionTimeout)));
+                .then((new TelnetClientChannelInitializer(telnetSettings, telnetSessionTimeout, credentials)));
     }
 
     static final class MicrometerTcpClientMetricsRecorder extends MicrometerChannelMetricsRecorder {
