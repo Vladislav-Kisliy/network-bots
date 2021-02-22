@@ -1,4 +1,7 @@
-package com.karlsoft.network.telnet.protocol.option;
+package com.karlsoft.network.telnet.protocol.handler;
+
+import com.karlsoft.network.telnet.protocol.packet.DefaultTelnetOptionPacket;
+import com.karlsoft.network.telnet.protocol.packet.TelnetOptionPacket;
 
 /**
  * It ignores all incomming commands.
@@ -10,5 +13,10 @@ public class DefaultTelnetOptionNegotiationHandler implements TelnetOptionNegoti
     @Override
     public TelnetOptionPacket getResponse(TelnetOptionPacket in) {
         return new DefaultTelnetOptionPacket(in.getCommand().negative(), in.getOption());
+    }
+
+    @Override
+    public TelnetOptionPacket getInitialMessage() {
+        return null;
     }
 }

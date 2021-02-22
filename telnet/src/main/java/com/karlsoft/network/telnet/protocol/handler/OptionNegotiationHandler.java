@@ -1,10 +1,8 @@
-package com.karlsoft.network.telnet.protocol.newpack;
+package com.karlsoft.network.telnet.protocol.handler;
 
 import com.karlsoft.network.telnet.protocol.TelnetOption;
-import com.karlsoft.network.telnet.protocol.option.DefaultTelnetOptionNegotiationHandler;
-import com.karlsoft.network.telnet.protocol.option.TelnetCommandPacket;
-import com.karlsoft.network.telnet.protocol.option.TelnetOptionNegotiationHandler;
-import com.karlsoft.network.telnet.protocol.option.TelnetOptionPacket;
+import com.karlsoft.network.telnet.protocol.packet.TelnetCommandPacket;
+import com.karlsoft.network.telnet.protocol.packet.TelnetOptionPacket;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;
@@ -16,8 +14,8 @@ public class OptionNegotiationHandler extends SimpleChannelInboundHandler<Telnet
 
     private final EnumMap<TelnetOption, TelnetOptionNegotiationHandler> negHandlers;
 
-    public OptionNegotiationHandler() {
-        this.negHandlers = new EnumMap<>(TelnetOption.class);
+    public OptionNegotiationHandler(EnumMap<TelnetOption, TelnetOptionNegotiationHandler> negHandlers) {
+        this.negHandlers = negHandlers;
     }
 
     @Override

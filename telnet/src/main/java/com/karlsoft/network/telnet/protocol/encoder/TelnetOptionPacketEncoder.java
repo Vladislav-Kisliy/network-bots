@@ -1,6 +1,8 @@
-package com.karlsoft.network.telnet.protocol.option;
+package com.karlsoft.network.telnet.protocol.encoder;
 
 import com.karlsoft.network.telnet.protocol.TelnetCommand;
+import com.karlsoft.network.telnet.protocol.packet.DefaultTelnetOptionPacket;
+import com.karlsoft.network.telnet.protocol.packet.TelnetOptionPacket;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.EncoderException;

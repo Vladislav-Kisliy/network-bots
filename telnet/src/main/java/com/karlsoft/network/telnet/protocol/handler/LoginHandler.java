@@ -1,4 +1,4 @@
-package com.karlsoft.network.telnet.protocol.newpack;
+package com.karlsoft.network.telnet.protocol.handler;
 
 import com.karlsoft.network.telnet.client.auth.Credentials;
 import com.karlsoft.network.telnet.transport.HexUtils;
@@ -35,12 +35,13 @@ public class LoginHandler extends SimpleChannelInboundHandler<String> {
     public LoginHandler(Credentials creds) {
         this.creds = creds;
         builder = new StringBuilder();
-        this.state = State.LOGIN;
+        state = State.LOGIN;
     }
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, String s) throws Exception {
         builder.append(s);
+        System.out.println("builder =" + builder);
         HexUtils.debugOutput(builder);
         switch (state()) {
             case LOGIN: {
@@ -84,7 +85,7 @@ public class LoginHandler extends SimpleChannelInboundHandler<String> {
     }
 
     private State state() {
-        return this.state;
+        return state;
     }
 
     private void checkpoint(State state) {

@@ -1,4 +1,4 @@
-package com.karlsoft.network.telnet.protocol.option;
+package com.karlsoft.network.telnet.protocol.packet;
 
 import com.karlsoft.network.telnet.protocol.TelnetCommand;
 import io.netty.handler.codec.DecoderResultProvider;

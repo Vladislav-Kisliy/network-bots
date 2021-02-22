@@ -1,10 +1,10 @@
-package com.karlsoft.network.telnet.protocol.newpack;
+package com.karlsoft.network.telnet.protocol.decoder;
 
 import com.karlsoft.network.telnet.protocol.TelnetCommand;
 import com.karlsoft.network.telnet.protocol.TelnetOption;
-import com.karlsoft.network.telnet.protocol.option.DefaultTelnetCommandPacket;
-import com.karlsoft.network.telnet.protocol.option.DefaultTelnetOptionPacket;
-import com.karlsoft.network.telnet.protocol.option.TelnetOptionPacket;
+import com.karlsoft.network.telnet.protocol.packet.DefaultTelnetCommandPacket;
+import com.karlsoft.network.telnet.protocol.packet.DefaultTelnetOptionPacket;
+import com.karlsoft.network.telnet.protocol.packet.TelnetOptionPacket;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.DecoderException;
