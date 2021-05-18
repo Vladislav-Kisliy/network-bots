@@ -17,15 +17,19 @@ public class TelnetOptionPacketEncoder extends MessageToByteEncoder<TelnetOption
     protected void encode(ChannelHandlerContext ctx,
                           TelnetOptionPacket msg, ByteBuf out) throws Exception {
         if (msg instanceof DefaultTelnetOptionPacket) {
-            encodeOptionPacket((DefaultTelnetOptionPacket) msg, out);
+            encodeOptionPacket(msg, out);
         } else {
-            throw new EncoderException("unsupported message type: " + StringUtil.simpleClassName(msg));
+            throw new EncoderException("Unsupported message type: " + StringUtil.simpleClassName(msg));
         }
     }
 
-    private static void encodeOptionPacket(DefaultTelnetOptionPacket msg, ByteBuf out) {
-        out.writeByte(TelnetCommand.IAC.getCode());
-        out.writeByte(msg.getCommand().getCode());
-        out.writeByte(msg.getOption().getCode());
+    private static void encodeOptionPacket(TelnetOptionPacket msg, ByteBuf out) {
+        if (msg != null) {
+            out.writeByte(TelnetCommand.IAC.getCode());
+            out.writeByte(msg.getCommand().getCode());
+            for (int i: msg.getOption()) {
+                out.writeByte(i);
+            }
+        }
     }
 }

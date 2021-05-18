@@ -4,7 +4,7 @@ import com.karlsoft.network.telnet.protocol.packet.DefaultTelnetOptionPacket;
 import com.karlsoft.network.telnet.protocol.packet.TelnetOptionPacket;
 
 /**
- * It ignores all incomming commands.
+ * It ignores all incoming commands.
  */
 public class DefaultTelnetOptionNegotiationHandler implements TelnetOptionNegotiationHandler {
 

@@ -72,6 +72,7 @@ public enum TelnetOption {
     /**
      * Returns the string representation of the telnet protocol option
      * corresponding to the given option code.
+     *
      * @param code The option code of the telnet protocol option
      * @return The representation of the telnet protocol option.
      */
@@ -84,6 +85,14 @@ public enum TelnetOption {
         return result;
     }
 
+    public static TelnetOption getOption(final int[] options) {
+        TelnetOption result = TelnetOption.UNASSIGNED;
+        if (options.length > 0) {
+            result = getOption(options[0]);
+        }
+
+        return result;
+    }
 
     /***
      * Determines if a given option code is valid.  Returns true if valid,

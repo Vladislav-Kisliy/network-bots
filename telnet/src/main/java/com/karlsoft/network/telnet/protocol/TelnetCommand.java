@@ -21,6 +21,11 @@ public enum TelnetCommand {
         }
 
         @Override
+        public TelnetCommand positive() {
+            return DO;
+        }
+
+        @Override
         public TelnetCommand negative() {
             return DONT;
         }
@@ -29,6 +34,11 @@ public enum TelnetCommand {
         @Override
         public boolean isNegotiation() {
             return true;
+        }
+
+        @Override
+        public TelnetCommand positive() {
+            return DONT;
         }
 
         @Override
@@ -43,6 +53,11 @@ public enum TelnetCommand {
         }
 
         @Override
+        public TelnetCommand positive() {
+            return WILL;
+        }
+
+        @Override
         public TelnetCommand negative() {
             return WONT;
         }
@@ -51,6 +66,11 @@ public enum TelnetCommand {
         @Override
         public boolean isNegotiation() {
             return true;
+        }
+
+        @Override
+        public TelnetCommand positive() {
+            return WONT;
         }
 
         @Override
@@ -73,6 +93,10 @@ public enum TelnetCommand {
 
     public int getCode() {
         return code;
+    }
+
+    public TelnetCommand positive() {
+        return UNASSIGNED;
     }
 
     public TelnetCommand negative() {

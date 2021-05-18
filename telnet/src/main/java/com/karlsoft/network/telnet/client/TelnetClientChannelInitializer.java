@@ -7,8 +7,11 @@ import com.karlsoft.network.telnet.protocol.encoder.TelnetOptionPacketEncoder;
 import com.karlsoft.network.telnet.protocol.handler.LoginHandler;
 import com.karlsoft.network.telnet.protocol.handler.OptionNegotiationHandler;
 import com.karlsoft.network.telnet.protocol.handler.TelnetOptionNegotiationHandler;
+import com.karlsoft.network.telnet.protocol.handler.TerminalTypeNegotiationHandler;
 import com.karlsoft.network.telnet.protocol.handler.WindowNegotiationHandler;
 import com.karlsoft.network.telnet.protocol.setting.TelnetSetting;
+import com.karlsoft.network.telnet.protocol.setting.TerminalTypeSetting;
+import com.karlsoft.network.telnet.protocol.setting.WindowSizeSetting;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.string.StringDecoder;
@@ -21,6 +24,7 @@ import reactor.netty.NettyPipeline;
 import java.net.SocketAddress;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -51,15 +55,14 @@ public final class TelnetClientChannelInitializer implements ChannelPipelineConf
         pipeline.addAfter("OptionHandler", "TeletEncoderName", TelnetOptionPacketEncoder.DEFAULT);
         pipeline.addAfter("StringDecoder", "STRING_ENCODER", STRING_ENCODER);
         EnumMap<TelnetOption, TelnetOptionNegotiationHandler> negHandlers = getNegotiationHandler();
-        OptionNegotiationHandler negotiationHandler = new OptionNegotiationHandler(negHandlers);
-        pipeline.addAfter("STRING_ENCODER", TELNET_HANDLER, negotiationHandler);
+        pipeline.addAfter("STRING_ENCODER", TELNET_HANDLER, new OptionNegotiationHandler(negHandlers));
         pipeline.addAfter(TELNET_HANDLER, "LoginHandler", new LoginHandler(creds));
 
         if (pipeline.get(NettyPipeline.LoggingHandler) != null) {
             pipeline.addBefore(NettyPipeline.ProxyHandler, NettyPipeline.ProxyLoggingHandler,
                     TelnetClientConfig.LOGGING_HANDLER);
         }
-        sendInitialNegotiationSequence(channel);
+        sendInitialNegotiationSequence(negHandlers, channel);
     }
 
     private EnumMap<TelnetOption, TelnetOptionNegotiationHandler> getNegotiationHandler() {
@@ -68,7 +71,10 @@ public final class TelnetClientChannelInitializer implements ChannelPipelineConf
             TelnetOption option = setting.getTelnetOption();
             switch (option) {
                 case WINDOW_SIZE:
-                    map.put(option, new WindowNegotiationHandler(setting));
+                    map.put(option, new WindowNegotiationHandler((WindowSizeSetting) setting));
+                    break;
+                case TERMINAL_TYPE:
+                    map.put(option, new TerminalTypeNegotiationHandler((TerminalTypeSetting) setting));
                     break;
 //                case TERMINAL_TYPE: map.put(option, new )
             }
@@ -76,6 +82,10 @@ public final class TelnetClientChannelInitializer implements ChannelPipelineConf
         return map;
     }
 
-    private void sendInitialNegotiationSequence(Channel channel) {
+    private void sendInitialNegotiationSequence(EnumMap<TelnetOption, TelnetOptionNegotiationHandler> negHandlers,
+                                                Channel channel) {
+        for (Map.Entry<TelnetOption, TelnetOptionNegotiationHandler> entry : negHandlers.entrySet()) {
+            channel.write(entry.getValue().getInitialMessage());
+        }
     }
 }

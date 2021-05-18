@@ -3,6 +3,7 @@ package com.karlsoft.network.telnet.protocol.handler;
 import com.karlsoft.network.telnet.protocol.TelnetOption;
 import com.karlsoft.network.telnet.protocol.packet.TelnetCommandPacket;
 import com.karlsoft.network.telnet.protocol.packet.TelnetOptionPacket;
+import com.karlsoft.network.telnet.transport.HexUtils;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;
@@ -19,10 +20,10 @@ public class OptionNegotiationHandler extends SimpleChannelInboundHandler<Telnet
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, TelnetOptionPacket packet) throws Exception {
+    protected void channelRead0(ChannelHandlerContext ctx, TelnetOptionPacket packet) {
         if (packet instanceof TelnetCommandPacket) {
             if (packet.getCommand().isNegotiation()) {
-                log.debug("Command {}, option {}", packet.getCommand(), packet.getOption());
+                log.debug("Command {}, option {}", packet.getCommand(), TelnetOption.getOption(packet.getOption()[0]));
                 TelnetOptionNegotiationHandler handler = getNegotiationHandler(packet);
                 ctx.channel().writeAndFlush(handler.getResponse(packet));
             } else {
@@ -40,8 +41,9 @@ public class OptionNegotiationHandler extends SimpleChannelInboundHandler<Telnet
 
     private TelnetOptionNegotiationHandler getNegotiationHandler(TelnetOptionPacket res) {
         TelnetOptionNegotiationHandler handler;
-        if (negHandlers.containsKey(res.getOption())) {
-            handler = negHandlers.get(res.getOption());
+        TelnetOption option = TelnetOption.getOption(res.getOption());
+        if (negHandlers.containsKey(option)) {
+            handler = negHandlers.get(option);
             log.debug("Found handler {}, for command {}", handler, res.getCommand());
         } else {
             log.debug("Didn't find handler, for command {}. Will use default", res.getCommand());

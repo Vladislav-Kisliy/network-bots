@@ -31,7 +31,7 @@ public class OptionPacketDecoder extends ReplayingDecoder<OptionPacketDecoder.St
     }
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, ByteBuf buf, List<Object> out) throws Exception {
+    protected void decode(ChannelHandlerContext ctx, ByteBuf buf, List<Object> out) {
         try {
             switch (state()) {
                 case WAITING_MARK: {
@@ -60,8 +60,7 @@ public class OptionPacketDecoder extends ReplayingDecoder<OptionPacketDecoder.St
                     break;
                 }
                 case READ_OPTION: {
-                    TelnetOption option = TelnetOption.getOption(buf.readUnsignedByte());
-                    out.add(DefaultTelnetOptionPacket.getOptionPacket(command, option));
+                    out.add(DefaultTelnetOptionPacket.getOptionPacket(command, buf.readUnsignedByte()));
                     checkpoint(State.WAITING_MARK);
                     break;
                 }
